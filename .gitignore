@@ -1,4 +1,5 @@
 # ignoring ./data as it is quite giganormous
 data/
-#test
+#
 BCKPbasecall_demux.sh
+screenlog*
