@@ -26,14 +26,14 @@ export JAVA_HOME
 
 ### Global vars
 n_threadus=10
-wanted_barcoda="07 10 11"
+wanted_barcoda="08"
 
 ### Tools
 porechop="$HOME/Documents/tool/Porechop/porechop-runner.py"
 fastq_to_fastq="$HOME/Documents/tool/Fast5-to-Fastq/fastq_to_fastq.py"
 unicycler="$HOME/Documents/tool/Unicycler/unicycler-runner.py"
 bbduk="$HOME/Documents/tool/bbmap/bbduk.sh"
-
+MinionQC="${HOME}/Documents/tool/minion_qc/MinionQC.R"
 ###############################################################################
 ###############    Basecalling and demux with albacore    #####################
 ###############################################################################
@@ -45,15 +45,19 @@ if [[ "$@" =~ "--otoro" ]]; then
 	echo "Basecall and Demux"
 	echo "starting: $(date)"
 	time \
-	read_fast5_basecaller.py \
-		--input ${fast5_dir} \
-		--output_format "fastq" \
-		--save_path ${basecall_dir} \
-		--flowcell FLO-MIN106 \
-		--kit  SQK-LSK108 \
-		--recursive \
-		--barcoding \
-		--worker_threads ${n_threadus}
+#	read_fast5_basecaller.py \
+#		--input ${fast5_dir} \
+#		--output_format "fastq" \
+#		--save_path ${basecall_dir} \
+#		--flowcell FLO-MIN106 \
+#		--kit  SQK-LSK108 \
+#		--recursive \
+#		--barcoding \
+#		--worker_threads ${n_threadus}
+	Rscript ${MinionQC} \
+		-i "./data/basecall/sequencing_summary.txt" \
+		-o "./data/basecall/minionQC" \
+		-p ${n_threadus}
 	echo "Basecall and Demux"
 	echo "ending: $(date)"
 
@@ -162,7 +166,7 @@ if [[ "$@" =~ "--monocycle" ]]; then
 		barcodus=barcode${n_barcodus}
 		curr_fastq="./data/fastq/barcode${n_barcodus}/trimmed/subsampled/${barcodus}.fastq.gz"
 		subsample_dir="$(dirname ${curr_fastq})/subsampled/${barcodus}"
-		illumina_dir="./data/fastq/barcode${n_barcodus}/illumina"
+		illumina_dir="./data/fastq/${barcodus}/illumina"
 		assembled_dir="./data/assembled/${barcodus}"
 		if [ -s "${curr_fastq}" ]; then
 			echo "Treating sample: ${barcodus}"	
@@ -174,14 +178,15 @@ if [[ "$@" =~ "--monocycle" ]]; then
 				unicycler_input="--unpaired ${illumina_fastq}"
 			fi
 			if [ "$n_illumina_reads" == 2 ]; then 
-				illumina_R1=`find ${illumina_dir} -type f -name "*clean*R1*.fastq*"`
-				illumina_R2=`find ${illumina_dir} -type f -name "*clean*R2*.fastq*"`
+				illumina_R1=$(find ${illumina_dir} -type f -name "*R1*clean*.fastq*")
+				illumina_R2=`find ${illumina_dir} -type f -name "*R2*clean*.fastq*"`
 				unicycler_input="-1 ${illumina_R1} -2 ${illumina_R2}"
 			fi
+			echo -e "Launching unicycler with reads: ${curr_fastq} and ${unicycler_input}"
 			${unicycler} \
 				${unicycler_input} \
 				--long ${curr_fastq}\
-				--verbosity 2 \
+				--verbosity 1 \
 				--out ${assembled_dir} \
 				--keep 0 \
 				--threads ${n_threadus}
