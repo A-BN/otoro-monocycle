@@ -45,15 +45,15 @@ if [[ "$@" =~ "--otoro" ]]; then
 	echo "Basecall and Demux"
 	echo "starting: $(date)"
 	time \
-#	read_fast5_basecaller.py \
-#		--input ${fast5_dir} \
-#		--output_format "fastq" \
-#		--save_path ${basecall_dir} \
-#		--flowcell FLO-MIN106 \
-#		--kit  SQK-LSK108 \
-#		--recursive \
-#		--barcoding \
-#		--worker_threads ${n_threadus}
+	read_fast5_basecaller.py \
+		--input ${fast5_dir} \
+		--output_format "fastq" \
+		--save_path ${basecall_dir} \
+		--flowcell FLO-MIN106 \
+		--kit  SQK-LSK108 \
+		--recursive \
+		--barcoding \
+		--worker_threads ${n_threadus}
 	Rscript ${MinionQC} \
 		-i "./data/basecall/sequencing_summary.txt" \
 		-o "./data/basecall/minionQC" \
